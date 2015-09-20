@@ -1,25 +1,107 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: 'Reproducible Research: Peer Assessment 1'
+author: "Eliza DCruz"
+date: "Monday, September 07, 2015"
+output: html_document
 ---
 
 
+```{r, echo=FALSE}
+library(dplyr)
+library(lubridate)
+library(timeDate)
+library(data.table)
+
+setwd("C:/Users/Eliza/Coursera/5/CourseProject1")
+```
+
 ## Loading and preprocessing the data
 
-
+```{r, echo = TRUE}
+activitydata <- data.table(read.csv("activity.csv", header = TRUE, na.strings = "NA"))
+activitydata$date <- as.Date(activitydata$date, "%Y-%m-%d")
+```
 
 ## What is mean total number of steps taken per day?
+1. Here is the code to calculate the total number of steps per a day: 
+```{r, echo=TRUE}
+sumdata <- select(activitydata, date, steps)
+by_date <- group_by(sumdata,date)
+sumdata<- summarize (by_date, sum(steps, na.rm = TRUE))
+setnames(sumdata, names(sumdata), c("Date", "Total_Steps"))
+```
 
+2. Here is the histogram graph of the total number of steps taken per day: 
+```{r, echo=TRUE}
+plot (sumdata$Date, sumdata$Total_Steps, main = "Total Number Of Steps Taken Per A Day", xlab = "Date", ylab = "Total Number of Steps", type = "h")
+```
 
+3. Here is the mean of the number of steps taken per a day:
+```{r, echo=TRUE}
+mean(sumdata$Total_Steps, na.rm=TRUE)
+```
 
+4. Here is the median of the number of steps taken per a day:
+```{r, echo=TRUE}
+median(sumdata$Total_Steps, na.rm=TRUE)
+```
 ## What is the average daily activity pattern?
-
-
-
+1. Here is the code to calculate the average daily activity pattern:
+```{r, echo=TRUE}
+intdata <- select (activitydata, interval, steps)
+by_interval <- group_by(intdata, interval)
+intdata <- summarize(by_interval, mean(steps, na.rm = TRUE))
+setnames(intdata, names(intdata), c("Interval", "Avg_Steps"))
+```
+2. Here is the time series plot:
+```{r, echo=TRUE}
+plot (intdata$Interval, intdata$Avg_Steps, main = "Time Series Plot of the 5-minute Intervals and the Average Number Of Steps Taken Per A Day", xlab = "Date", ylab = "Total Number of Steps", type = "l")
+```
+3. Here is the code to find the 5-minute interval that contains the maximum number of steps: 
+```{r, echo=TRUE}
+xt <- filter(intdata, Avg_Steps == max(intdata$Avg_Steps))
+print(xt, type="html")
+```
 ## Imputing missing values
+1. Here is the code to calculate and report the number of missing values in the dataset:
+```{r, echo=TRUE}
+length(is.na(activitydata))
+```
+2. Here is the code to fill in the missing data with averages: 
+```{r, echo=TRUE}
+avgs <- mean (activitydata$steps, na.rm = TRUE)
+avgi <- mean (activitydata$interval, na.rm = TRUE)
+activitydata$steps[is.na(activitydata$steps)==TRUE]<- avgs
+activitydata$interval[is.na(activitydata$interval)==TRUE]<- avgi
+```
+3. Here is the code to calculate the total number of steps taken each day: 
+```{r, echo=TRUE}
+sumdata2 <- select(activitydata, date, steps)
+by_date <- group_by(sumdata2,date)
+sumdata2<- summarize (by_date, sum(steps, na.rm = TRUE))
+setnames(sumdata2, names(sumdata2), c("Date", "Total_Steps"))
+```
+4. Here is a histogram of the total number of steps taken each day: 
 
+```{r, echo=TRUE}
+plot (sumdata2$Date, sumdata2$Total_Steps, main = "Total Number Of Steps Taken Per A Day", xlab = "Date", ylab = "Total Number of Steps", type = "h")
+```
 
+5. Here is the code to calculate the median and mean total number of steps taken per day: 
 
+```{r, echo=TRUE}
+at <- summary(sumdata2$Total_Steps)
+print(at, type = "html")
+```
 ## Are there differences in activity patterns between weekdays and weekends?
+
+1. Here is a code to create a new factor variable: 
+```{r, echo=TRUE}
+activitydata1 <- mutate(activitydata, week_days = isWeekday(activitydata$date, wday=1:5))
+```
+2. Here is a code to create the data set for the plot:
+```{r, echo=TRUE}
+adata <- select(activitydata1, week_days, steps)
+by_week_days <- group_by(adata,week_days)
+```
+
